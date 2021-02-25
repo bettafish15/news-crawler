@@ -3,7 +3,7 @@ const config = require('./config')();
 
 module.exports =function(){
 
-    mongoose.connect(config.mongoose.uri, config.mongoose.options);
+    let db = mongoose.connect(config.mongoose.uri, config.mongoose.options);
 
     mongoose.connection.on('connected', function(){
         console.log("Mongoose default connection is open to ", config.mongoose.uri);
@@ -23,4 +23,6 @@ module.exports =function(){
             process.exit(0)
         });
     });
+
+    return db;
 }

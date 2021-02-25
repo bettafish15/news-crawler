@@ -1,12 +1,22 @@
 const utils = require("../utils/utils");
 let newsDB = require('../models/newsModel');
-require('../config/mongoose')();
+
 let constData = require('../const/constData');
 
 const VNEXPRESS_BASE = "https://vnexpress.net";
 
 const CATEGORY = {
-    "thoi-su": "thời sự",
+    "thoi-su": "Thời sự",
+    "the-gioi": "Thế giới",
+    "kinh-doanh": "Kinh doanh",
+    "giai-tri": "Giải trí",
+    "the-thao": "Thể thao",
+    "phap-luat": "Pháp luật",
+    "giao-duc": "Giáo dục",
+    "suc-khoe": "Sức khỏe",
+    "doi-song": "Đời sống",
+    "du-lich": "Du lịch",
+    "khoa-hoc": "Khoa học",
 };
 
 const crawler = async () => {
@@ -15,6 +25,42 @@ const crawler = async () => {
     } catch (error) {
         console.error(error);
     }
+};
+
+const getPostsData = async (PAGE_LIMIT) => {
+    Object.keys(CATEGORY).forEach(async (key) => {
+        //PAGE_LIMIT is number of pages we want to crawl
+        [...Array(PAGE_LIMIT)].forEach(async (_, pageIndex) => {
+
+            //page index starts from 1
+            pageIndex+=1;
+            let $ = await utils.fetchHtmlFromUrl(VNEXPRESS_BASE + "/" + key+'-p'+pageIndex);
+            $('h3[class="title-news"]>a').each(async (i, el) => {
+                //chu de
+                let category = CATEGORY[key];
+                //title
+                let title = $(el).text();
+
+                //link
+                let link = $(el).attr("href");
+
+                //datetime
+                let datetime = await getDateTimeOfPost(link);
+
+                let news = { link: link, title: title, category: category, date: datetime };
+                try{
+                    await newsDB.create(news);
+                }catch(error){
+                    if(error.code == 11000){
+                        console.log('Already exists in database');
+                    }else{
+                        console.log(error.code);
+                    }
+                }
+                
+            });
+        });
+    });
 };
 
 // go in specific post to get date information
@@ -40,35 +86,6 @@ const getDateTimeOfPost = async (url) => {
         let date = new Date();
         return date;
     }
-};
-
-const getPostsData = async (PAGE_LIMIT) => {
-    Object.keys(CATEGORY).forEach(async (key) => {
-        //PAGE_LIMIT is number of pages we want to crawl
-        [...Array(PAGE_LIMIT)].forEach(async (_, i) => {
-            let $ = await utils.fetchHtmlFromUrl(VNEXPRESS_BASE + "/" + key+'-p'+i);
-            $("h3>a").each(async (i, el) => {
-                //chu de
-                let category = CATEGORY[key];
-                //title
-                let title = $(el).text();
-
-                //link
-                let link = $(el).attr("href");
-
-                //datetime
-                let datetime = await getDateTimeOfPost($(el).attr("href"));
-
-                let news = { link: link, title: title, category: category, date: datetime };
-                try{
-                    await newsDB.create(news);
-                }catch(error){
-                    console.log(error);
-                }
-                
-            });
-        });
-    });
 };
 
 crawler();
