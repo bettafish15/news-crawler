@@ -1,4 +1,7 @@
 const utils = require("../utils/utils");
+let newsDB = require('../models/newsModel');
+require('../config/mongoose')();
+let constData = require('../const/constData');
 
 const VNEXPRESS_BASE = "https://vnexpress.net";
 
@@ -8,7 +11,7 @@ const CATEGORY = {
 
 const crawler = async () => {
     try {
-        getPostsData();
+        getPostsData(constData.PAGE_LIMIT);
     } catch (error) {
         console.error(error);
     }
@@ -39,21 +42,31 @@ const getDateTimeOfPost = async (url) => {
     }
 };
 
-const getPostsData = async () => {
+const getPostsData = async (PAGE_LIMIT) => {
     Object.keys(CATEGORY).forEach(async (key) => {
-        let $ = await utils.fetchHtmlFromUrl(VNEXPRESS_BASE + "/" + key);
-        $("h3>a").each(async (i, el) => {
-            //chu de
-            console.log(key);
-            //title
-            console.log($(el).text());
+        //PAGE_LIMIT is number of pages we want to crawl
+        [...Array(PAGE_LIMIT)].forEach(async (_, i) => {
+            let $ = await utils.fetchHtmlFromUrl(VNEXPRESS_BASE + "/" + key+'-p'+i);
+            $("h3>a").each(async (i, el) => {
+                //chu de
+                let category = CATEGORY[key];
+                //title
+                let title = $(el).text();
 
-            //link
-            console.log($(el).attr("href"));
-            let datetime = await getDateTimeOfPost($(el).attr("href"));
+                //link
+                let link = $(el).attr("href");
 
-            //date
-            console.log(datetime);
+                //datetime
+                let datetime = await getDateTimeOfPost($(el).attr("href"));
+
+                let news = { link: link, title: title, category: category, date: datetime };
+                try{
+                    await newsDB.create(news);
+                }catch(error){
+                    console.log(error);
+                }
+                
+            });
         });
     });
 };

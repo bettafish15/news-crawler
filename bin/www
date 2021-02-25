@@ -4,6 +4,8 @@
  * Module dependencies.
  */
 
+require('dotenv').config();
+require('../config/mongoose')();
 var app = require('../app');
 var debug = require('debug')('news-crawler:server');
 var http = require('http');

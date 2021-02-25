@@ -1,3 +1,3 @@
 module.exports = {
-    PAGE_LIMIT: 1,
+    PAGE_LIMIT: 5,
 }
