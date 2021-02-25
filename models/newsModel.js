@@ -5,7 +5,8 @@ let newsSchema = new Schema({
     link: {
         type: String,
         unique: true,
-        required: true
+        required: true,
+        index: true
     },
     title: {
         type: String,
@@ -17,7 +18,7 @@ let newsSchema = new Schema({
         unique: false,
         required: false
     },
-    date: { type: Date, default: Date.now },
+    date: { type: Date, default: Date.now, index: true },
 }, {
     timestamps: true
 });
