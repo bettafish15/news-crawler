@@ -2,6 +2,8 @@ var Crawler = require("crawler");
 
 var c = new Crawler({
     maxConnections : 10,
+    debug: true,
+    //rateLimit: 1000,
     // This will be called for each crawled page
     callback : function (error, res, done) {
         if(error){
